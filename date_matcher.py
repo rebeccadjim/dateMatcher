@@ -32,12 +32,6 @@ def create_csv(csv_name, frame):
 
     print(f'CSV file "{csv_name}" created successfully.') 
 
-# # Fonction pour récupérer les ids dans les csv
-# def get_ids(csv_name, file_path, id_column1, id_column2):
-#     dataframe = pd.read_csv(file_path)
-#     dataframe = dataframe[[id_column1, id_column2]]
-#     create_csv(csv_name, dataframe)
-
 # Fonction de tri 
 def filter_data(dataframe, comparison_date, sign):
     if sign == '+':
@@ -60,25 +54,29 @@ def get_matching_data(fist_dataframe, second_dataframe, second_dataframe_filter_
 
         # Création d'un tableau filtré en fonction des dates du premier tableau
         filtered_second_dataframe = filter_data(second_dataframe, first_dataframe_date, second_dataframe_filter_sign)
-        
+
         # Création d'un tableau final contenant les ID correspondants à chaque association de dates, et indiquant la meilleure
         if not filtered_second_dataframe.empty: 
             for _, df_row in filtered_second_dataframe.iterrows() :
                 second_dataframe_id = df_row['ID']
                 second_dataframe_date = df_row['Date']
                 second_dataframe_sex = df_row['Sex']
+
+                score = 1-(second_dataframe_date - first_dataframe_date).days/args.max_date
+
                 if (first_dataframe_sex == second_dataframe_sex or first_dataframe_sex is None or second_dataframe_sex is None):
                     if any(entry[0] == first_dataframe_date and 
-                        (entry[1] > second_dataframe_date) for entry in final_dataset):
-                        final_dataset.append((first_dataframe_date, second_dataframe_date, first_dataframe_id, second_dataframe_id, 'Best bet'))
+                        entry[1] > second_dataframe_date for entry in final_dataset):
+                        final_dataset.append((first_dataframe_date, second_dataframe_date, first_dataframe_id, second_dataframe_id,score,'Best bet'))
                     else: 
-                        final_dataset.append((first_dataframe_date, second_dataframe_date, first_dataframe_id, second_dataframe_id, ''))
-        
-    return final_dataset
+                        final_dataset.append((first_dataframe_date, second_dataframe_date, first_dataframe_id, second_dataframe_id,score,''))       
+
+    return sorted(final_dataset)
+
 
 # Ajout de tracé
 def add_matching_data_trace(category1, category2, fig, data, color, dash):
-    for date1, date2, _, _,bet in data:
+    for date1, date2, _, _, _, bet in data:
         if bet == 'Best bet':
             fig.add_trace(go.Scatter(x=[date1, date2],
                                     y=[category1, category2],
@@ -108,7 +106,6 @@ args = parser.parse_args()
 death_dataframe = create_dataframe('Death', args.death_file, 'FECHA_MUERTE', 'SEXO', 'ID_CNI')
 necropsy_dataframe = create_dataframe('Necropsy', args.necropsy_file, 'FECHA NECROPSIA', 'SEXO', 'ID_CNI')
 inhumation_dataframe = create_dataframe('Inhumation', args.inhumation_file, 'FECHA_INHUMACION', 'SEXO', 'ID_CEMENTERIO')
-
 
 #------------------------------Fonction principale------------------------------
 
