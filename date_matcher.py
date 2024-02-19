@@ -3,16 +3,22 @@ import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 import csv
-from datetime import timedelta 
+from datetime import timedelta, datetime 
 import plotly.graph_objects as go
 
 # ------------------------------Fonctions------------------------------
 
 # Fonction pour pré-traiter les données
 def create_dataframe(category, file_path, date_column, sex_column, id_column):
-    dataframe = pd.read_excel(file_path)
-    dataframe = dataframe[[date_column, sex_column, id_column]]
 
+    if file_path.endswith('.xlsx'):
+        dataframe = pd.read_excel(file_path)
+        dataframe = dataframe[[date_column, sex_column, id_column]]
+
+    elif file_path.endswith('.csv'): 
+        dataframe = pd.read_csv(file_path)
+        dataframe[date_column] = pd.to_datetime(dataframe[date_column], errors='coerce')
+    
     final_dataframe = pd.DataFrame({
         'Category': [category] * len(dataframe[date_column]),
         'Date' : dataframe[date_column],
@@ -64,9 +70,12 @@ def get_matching_data(fist_dataframe, second_dataframe, second_dataframe_filter_
 
                 score = 1-(second_dataframe_date - first_dataframe_date).days/args.max_date
 
-                if (first_dataframe_sex == second_dataframe_sex or first_dataframe_sex is None or second_dataframe_sex is None):
+                if (first_dataframe_id != second_dataframe_id and
+                    all(entry[2] != second_dataframe_id and entry[3] != first_dataframe_id for entry in final_dataset) and
+                    first_dataframe_sex == second_dataframe_sex or first_dataframe_sex is None or second_dataframe_sex is None):
                     if any(entry[0] == first_dataframe_date and 
-                        entry[1] > second_dataframe_date for entry in final_dataset):
+                        entry[1] > second_dataframe_date
+                        for entry in final_dataset):
                         final_dataset.append((first_dataframe_date, second_dataframe_date, first_dataframe_id, second_dataframe_id,score,'Best bet'))
                     else: 
                         final_dataset.append((first_dataframe_date, second_dataframe_date, first_dataframe_id, second_dataframe_id,score,''))       
