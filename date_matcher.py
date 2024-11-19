@@ -10,7 +10,6 @@ import plotly.graph_objects as go
 
 # Fonction pour pré-traiter les données
 def create_dataframe(category, file_path, date_column, sex_column, id_column):
-# Hello
     if file_path.endswith('.xlsx'):
         try:
             dataframe = pd.read_excel(file_path)
