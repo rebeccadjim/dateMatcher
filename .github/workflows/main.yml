@@ -1,0 +1,24 @@
+name: k6 Test  
+
+on:   
+  push:  
+    branches:   
+      - main  
+  pull_request:  
+
+jobs:  
+  k6:  
+    runs-on: ubuntu-latest  
+
+    steps:  
+      - name: Checkout repository  
+        uses: actions/checkout@v2  
+
+      - name: Install k6  
+        run: |  
+          sudo apt update  
+          sudo apt install -y k6  
+
+      - name: Run k6 tests  
+        run: |  
+          k6 run test/script.js  
